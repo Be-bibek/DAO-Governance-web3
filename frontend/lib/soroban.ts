@@ -42,20 +42,21 @@ export function getGovernanceClient(publicKey?: string) {
  * Custom Error Mapping for DAO
  */
 export function mapSorobanError(error: any): Error {
-  if (error instanceof Error) {
-    if (error.message.includes('User declined') || error.message.includes('rejected')) {
-      return new Error('Wallet interaction was rejected by the user.');
-    }
-    if (error.message.includes('Voting period has ended')) {
-      return new Error('The voting period for this proposal has already ended.');
-    }
-    if (error.message.includes('Voter has already voted')) {
-      return new Error('You have already cast a vote for this proposal.');
-    }
-    if (error.message.includes('Proposal did not pass')) {
-      return new Error('This proposal failed to pass and cannot be executed.');
-    }
-    return error;
+  const errorMessage = error instanceof Error ? error.message : (error?.message || String(error));
+
+  if (errorMessage.toLowerCase().includes('user declined') || errorMessage.toLowerCase().includes('rejected')) {
+    return new Error('Wallet interaction was canceled. You can switch your account in Freighter and try again.');
   }
-  return new Error('An unknown error occurred during the transaction.');
+  if (errorMessage.includes('Voting period has ended')) {
+    return new Error('The voting period for this proposal has already ended.');
+  }
+  if (errorMessage.includes('Voter has already voted')) {
+    return new Error('You have already cast a vote for this proposal.');
+  }
+  if (errorMessage.includes('Proposal did not pass')) {
+    return new Error('This proposal failed to pass and cannot be executed.');
+  }
+  
+  if (error instanceof Error) return error;
+  return new Error(errorMessage || 'An unknown error occurred during the transaction.');
 }

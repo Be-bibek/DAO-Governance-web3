@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   const handleVote = async (proposalId: number, support: boolean) => {
     if (!publicKey) return;
-    setActionLoading(`vote-${proposalId}`);
+    setActionLoading(`vote-${support ? 'yes' : 'no'}-${proposalId}`);
     try {
       const client = getGovernanceClient(publicKey);
       const tx = await client.vote({
@@ -181,7 +181,7 @@ export default function Dashboard() {
                         onClick={() => handleVote(Number(proposal.id), true)}
                         className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10"
                       >
-                        {actionLoading === `vote-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote Yes'}
+                        {actionLoading === `vote-yes-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote Yes'}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -189,7 +189,7 @@ export default function Dashboard() {
                         onClick={() => handleVote(Number(proposal.id), false)}
                         className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
                       >
-                        {actionLoading === `vote-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote No'}
+                        {actionLoading === `vote-no-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote No'}
                       </Button>
                     </>
                   ) : status === 'Passed' ? (
