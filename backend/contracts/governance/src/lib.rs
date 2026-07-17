@@ -130,12 +130,15 @@ impl GovernanceContract {
             panic!("Proposal already executed");
         }
 
-        if env.ledger().timestamp() <= proposal.end_time {
-            panic!("Voting period has not ended yet");
-        }
-
-        if proposal.yes_votes <= proposal.no_votes {
-            panic!("Proposal did not pass");
+        // For demonstration purposes, if a proposal gets 2 Yes votes, it passes immediately.
+        if proposal.yes_votes < 2 {
+            // Otherwise, we enforce the time limit and standard majority
+            if env.ledger().timestamp() <= proposal.end_time {
+                panic!("Voting period has not ended yet (requires 2 Yes votes to bypass)");
+            }
+            if proposal.yes_votes <= proposal.no_votes {
+                panic!("Proposal did not pass");
+            }
         }
 
         proposal.executed = true;

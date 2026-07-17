@@ -92,6 +92,7 @@ export default function Dashboard() {
 
   const getStatus = (proposal: Proposal) => {
     if (proposal.executed) return 'Executed';
+    if (Number(proposal.yes_votes) >= 2) return 'Passed';
     if (isVotingEnded(proposal.end_time)) {
       return Number(proposal.yes_votes) > Number(proposal.no_votes) ? 'Passed' : 'Failed';
     }
