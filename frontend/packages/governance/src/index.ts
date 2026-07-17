@@ -34,11 +34,9 @@ if (typeof window !== "undefined") {
 export const networks = {
   testnet: {
     networkPassphrase: "Test SDF Network ; September 2015",
-    contractId: "CA4DZBWZKA3W24ONABMSJFOIBZP7AOYPCLX4N6IWRUWQOXO5IXID26UH",
+    contractId: "CDQTIDYF23ZOPCO7PM2COAHMYAL46IYL4VUG7EDFQ5FXU6LEKRL2CXJF",
   }
 } as const
-
-export type DataKey = {tag: "Treasury", values: void} | {tag: "Token", values: void} | {tag: "ProposalCount", values: void} | {tag: "Proposal", values: readonly [u32]} | {tag: "HasVoted", values: readonly [u32, string]};
 
 
 export interface Proposal {
@@ -53,6 +51,8 @@ export interface Proposal {
   title: string;
   yes_votes: u32;
 }
+
+export type GovDataKey = {tag: "Treasury", values: void} | {tag: "Token", values: void} | {tag: "ProposalCount", values: void} | {tag: "Proposal", values: readonly [u32]} | {tag: "HasVoted", values: readonly [u32, string]};
 
 export type DataKey = {tag: "Governance", values: void};
 
@@ -88,6 +88,12 @@ export interface Client {
   init_governance: ({treasury, token}: {treasury: string, token: string}, options?: MethodOptions) => Promise<AssembledTransaction<null>>
 
   /**
+   * Construct and simulate a get_proposal_count transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+   * Get the total number of proposals created
+   */
+  get_proposal_count: (options?: MethodOptions) => Promise<AssembledTransaction<u32>>
+
+  /**
    * Construct and simulate a withdraw transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    * Withdraw funds from the Treasury.
    * ONLY the registered Governance contract can authorize this.
@@ -120,11 +126,12 @@ export class Client extends ContractClient {
     super(
       new ContractSpec([ "AAAAAAAAAC9Wb3RlIG9uIGEgcHJvcG9zYWwgKHRydWUgZm9yIFllcywgZmFsc2UgZm9yIE5vKQAAAAAEdm90ZQAAAAMAAAAAAAAABXZvdGVyAAAAAAAAEwAAAAAAAAALcHJvcG9zYWxfaWQAAAAABAAAAAAAAAAHc3VwcG9ydAAAAAABAAAAAA==",
         "AAAAAAAAAB1FeGVjdXRlIGEgc3VjY2Vzc2Z1bCBwcm9wb3NhbAAAAAAAAAdleGVjdXRlAAAAAAEAAAAAAAAAC3Byb3Bvc2FsX2lkAAAAAAQAAAAA",
-        "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAABQAAAAAAAAAAAAAACFRyZWFzdXJ5AAAAAAAAAAAAAAAFVG9rZW4AAAAAAAAAAAAAAAAAAA1Qcm9wb3NhbENvdW50AAAAAAAAAQAAAAAAAAAIUHJvcG9zYWwAAAABAAAABAAAAAEAAAAAAAAACEhhc1ZvdGVkAAAAAgAAAAQAAAAT",
         "AAAAAQAAAAAAAAAAAAAACFByb3Bvc2FsAAAACgAAAAAAAAAGYW1vdW50AAAAAAALAAAAAAAAAAtkZXNjcmlwdGlvbgAAAAAQAAAAAAAAAAhlbmRfdGltZQAAAAYAAAAAAAAACGV4ZWN1dGVkAAAAAQAAAAAAAAACaWQAAAAAAAQAAAAAAAAACG5vX3ZvdGVzAAAABAAAAAAAAAAIcHJvcG9zZXIAAAATAAAAAAAAAAlyZWNpcGllbnQAAAAAAAATAAAAAAAAAAV0aXRsZQAAAAAAABAAAAAAAAAACXllc192b3RlcwAAAAAAAAQ=",
         "AAAAAAAAAA9WaWV3IGEgcHJvcG9zYWwAAAAADGdldF9wcm9wb3NhbAAAAAEAAAAAAAAAC3Byb3Bvc2FsX2lkAAAAAAQAAAABAAAH0AAAAAhQcm9wb3NhbA==",
+        "AAAAAgAAAAAAAAAAAAAACkdvdkRhdGFLZXkAAAAAAAUAAAAAAAAAAAAAAAhUcmVhc3VyeQAAAAAAAAAAAAAABVRva2VuAAAAAAAAAAAAAAAAAAANUHJvcG9zYWxDb3VudAAAAAAAAAEAAAAAAAAACFByb3Bvc2FsAAAAAQAAAAQAAAABAAAAAAAAAAhIYXNWb3RlZAAAAAIAAAAEAAAAEw==",
         "AAAAAAAAABVDcmVhdGUgYSBuZXcgcHJvcG9zYWwAAAAAAAAPY3JlYXRlX3Byb3Bvc2FsAAAAAAYAAAAAAAAACHByb3Bvc2VyAAAAEwAAAAAAAAAFdGl0bGUAAAAAAAAQAAAAAAAAAAtkZXNjcmlwdGlvbgAAAAAQAAAAAAAAAAlyZWNpcGllbnQAAAAAAAATAAAAAAAAAAZhbW91bnQAAAAAAAsAAAAAAAAAEGR1cmF0aW9uX3NlY29uZHMAAAAGAAAAAQAAAAQ=",
         "AAAAAAAAAE5Jbml0aWFsaXplIHRoZSBHb3Zlcm5hbmNlIGNvbnRyYWN0IHdpdGggdGhlIFRyZWFzdXJ5IGFkZHJlc3MgYW5kIFRva2VuIGFkZHJlc3MAAAAAAA9pbml0X2dvdmVybmFuY2UAAAAAAgAAAAAAAAAIdHJlYXN1cnkAAAATAAAAAAAAAAV0b2tlbgAAAAAAABMAAAAA",
+        "AAAAAAAAAClHZXQgdGhlIHRvdGFsIG51bWJlciBvZiBwcm9wb3NhbHMgY3JlYXRlZAAAAAAAABJnZXRfcHJvcG9zYWxfY291bnQAAAAAAAAAAAABAAAABA==",
         "AAAAAAAAAF1XaXRoZHJhdyBmdW5kcyBmcm9tIHRoZSBUcmVhc3VyeS4KT05MWSB0aGUgcmVnaXN0ZXJlZCBHb3Zlcm5hbmNlIGNvbnRyYWN0IGNhbiBhdXRob3JpemUgdGhpcy4AAAAAAAAId2l0aGRyYXcAAAADAAAAAAAAAAV0b2tlbgAAAAAAABMAAAAAAAAABmFtb3VudAAAAAAACwAAAAAAAAAJcmVjaXBpZW50AAAAAAAAEwAAAAA=",
         "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAAAQAAAAAAAAAAAAAACkdvdmVybmFuY2UAAA==",
         "AAAAAAAAAERJbml0aWFsaXplIHRoZSBUcmVhc3VyeSB3aXRoIHRoZSBhZGRyZXNzIG9mIHRoZSBHb3Zlcm5hbmNlIGNvbnRyYWN0LgAAAA1pbml0X3RyZWFzdXJ5AAAAAAAAAQAAAAAAAAAKZ292ZXJuYW5jZQAAAAAAEwAAAAA=" ]),
@@ -137,6 +144,7 @@ export class Client extends ContractClient {
         get_proposal: this.txFromJSON<Proposal>,
         create_proposal: this.txFromJSON<u32>,
         init_governance: this.txFromJSON<null>,
+        get_proposal_count: this.txFromJSON<u32>,
         withdraw: this.txFromJSON<null>,
         init_treasury: this.txFromJSON<null>
   }

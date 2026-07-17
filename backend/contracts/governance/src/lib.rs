@@ -165,6 +165,14 @@ impl GovernanceContract {
             .get(&GovDataKey::Proposal(proposal_id))
             .unwrap_or_else(|| panic!("Proposal not found"))
     }
+
+    /// Get the total number of proposals created
+    pub fn get_proposal_count(env: Env) -> u32 {
+        env.storage()
+            .instance()
+            .get(&GovDataKey::ProposalCount)
+            .unwrap_or(0)
+    }
 }
 
 mod test;

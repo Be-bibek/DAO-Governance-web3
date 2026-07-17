@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWalletStore } from '@/store/walletStore';
 import { toast } from 'sonner';
+import { getGovernanceClient, mapSorobanError } from '@/lib/soroban';
 
 export default function CreateProposal() {
   const router = useRouter();
@@ -24,19 +25,29 @@ export default function CreateProposal() {
     setLoading(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const title = formData.get('title');
-      const description = formData.get('description');
-      const amount = formData.get('amount');
-      const recipient = formData.get('recipient');
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string;
+      const amount = formData.get('amount') as string;
+      const recipient = formData.get('recipient') as string;
 
-      // TODO: Replace with actual Soroban contract call
-      toast.info('Simulating contract call...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const client = getGovernanceClient(publicKey);
+      const stroopsAmount = BigInt(Math.floor(Number(amount) * 10000000));
+
+      const tx = await client.create_proposal({
+        proposer: publicKey,
+        title,
+        description,
+        amount: stroopsAmount,
+        recipient,
+        duration_seconds: BigInt(86400 * 3), // 3 days
+      });
+
+      await tx.signAndSend();
       
       toast.success('Proposal created successfully!');
       router.push('/');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create proposal');
+      toast.error(mapSorobanError(err).message || 'Failed to create proposal');
     } finally {
       setLoading(false);
     }

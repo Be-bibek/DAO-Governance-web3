@@ -1,28 +1,49 @@
-import { rpc, TransactionBuilder, Networks, SorobanRpc, xdr, Contract, Asset } from '@stellar/stellar-sdk';
+import * as Governance from 'governance';
+import * as Treasury from 'treasury';
+import { Networks, TransactionBuilder, rpc } from '@stellar/stellar-sdk';
 import { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 
 export const RPC_URL = 'https://soroban-testnet.stellar.org:443';
 export const NETWORK_PASSPHRASE = Networks.TESTNET;
-
-// Contract addresses (to be updated after deployment)
-export const TREASURY_CONTRACT_ID = 'TODO';
-export const GOVERNANCE_CONTRACT_ID = 'TODO';
-
 export const server = new rpc.Server(RPC_URL);
+
+// Our freshly deployed contracts
+export const GOVERNANCE_CONTRACT_ID = 'CDQTIDYF23ZOPCO7PM2COAHMYAL46IYL4VUG7EDFQ5FXU6LEKRL2CXJF';
+export const TREASURY_CONTRACT_ID = 'CDBG6CZ6DPMULBZP3UMUROTHQQO7KBAFKBXOSLKAXECJBIODY5QJ4A6W';
+
+/**
+ * Returns a configured Governance contract client ready to sign & submit transactions.
+ */
+export function getGovernanceClient(publicKey?: string) {
+  return new Governance.Client({
+    networkPassphrase: NETWORK_PASSPHRASE,
+    contractId: GOVERNANCE_CONTRACT_ID,
+    rpcUrl: RPC_URL,
+    publicKey,
+    signTransaction: async (xdr: string) => {
+      if (!publicKey) throw new Error("Wallet not connected");
+      try {
+        const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
+          networkPassphrase: NETWORK_PASSPHRASE,
+          address: publicKey,
+        });
+        return { signedTxXdr };
+      } catch (e: any) {
+        if (e.message?.includes('User declined') || e.message?.includes('rejected')) {
+          throw new Error('Wallet interaction was rejected by the user.');
+        }
+        throw e;
+      }
+    }
+  });
+}
 
 /**
  * Custom Error Mapping for DAO
  */
-export class SorobanError extends Error {
-  constructor(message: string, public code?: number) {
-    super(message);
-    this.name = 'SorobanError';
-  }
-}
-
 export function mapSorobanError(error: any): Error {
   if (error instanceof Error) {
-    if (error.message.includes('User declined')) {
+    if (error.message.includes('User declined') || error.message.includes('rejected')) {
       return new Error('Wallet interaction was rejected by the user.');
     }
     if (error.message.includes('Voting period has ended')) {
@@ -37,46 +58,4 @@ export function mapSorobanError(error: any): Error {
     return error;
   }
   return new Error('An unknown error occurred during the transaction.');
-}
-
-export async function submitTransaction(
-  transaction: any,
-  publicKey: string
-) {
-  try {
-    const { signedTxXdr } = await StellarWalletsKit.signTransaction(transaction.toXDR(), {
-      networkPassphrase: NETWORK_PASSPHRASE,
-      address: publicKey,
-    });
-
-    const parsedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
-    const response = await server.sendTransaction(parsedTx as any);
-
-    if (response.status === 'ERROR') {
-      throw new Error(`Transaction submission failed: ${response.errorResultXdr}`);
-    }
-
-    return response.hash;
-  } catch (err) {
-    throw mapSorobanError(err);
-  }
-}
-
-export async function pollTransaction(txHash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
-  const MAX_ATTEMPTS = 15;
-  const POLLING_INTERVAL = 3000;
-
-  for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    const response = await server.getTransaction(txHash);
-    
-    if (response.status === 'SUCCESS') {
-      return response;
-    } else if (response.status === 'FAILED') {
-      throw new Error(`Transaction failed on ledger. Hash: ${txHash}`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL));
-  }
-  
-  throw new Error('Transaction confirmation timed out.');
 }

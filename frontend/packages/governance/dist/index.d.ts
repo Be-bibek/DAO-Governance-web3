@@ -7,10 +7,22 @@ export * as rpc from "@stellar/stellar-sdk/rpc";
 export declare const networks: {
     readonly testnet: {
         readonly networkPassphrase: "Test SDF Network ; September 2015";
-        readonly contractId: "CA4DZBWZKA3W24ONABMSJFOIBZP7AOYPCLX4N6IWRUWQOXO5IXID26UH";
+        readonly contractId: "CDQTIDYF23ZOPCO7PM2COAHMYAL46IYL4VUG7EDFQ5FXU6LEKRL2CXJF";
     };
 };
-export type DataKey = {
+export interface Proposal {
+    amount: i128;
+    description: string;
+    end_time: u64;
+    executed: boolean;
+    id: u32;
+    no_votes: u32;
+    proposer: string;
+    recipient: string;
+    title: string;
+    yes_votes: u32;
+}
+export type GovDataKey = {
     tag: "Treasury";
     values: void;
 } | {
@@ -26,18 +38,6 @@ export type DataKey = {
     tag: "HasVoted";
     values: readonly [u32, string];
 };
-export interface Proposal {
-    amount: i128;
-    description: string;
-    end_time: u64;
-    executed: boolean;
-    id: u32;
-    no_votes: u32;
-    proposer: string;
-    recipient: string;
-    title: string;
-    yes_votes: u32;
-}
 export type DataKey = {
     tag: "Governance";
     values: void;
@@ -87,6 +87,11 @@ export interface Client {
         token: string;
     }, options?: MethodOptions) => Promise<AssembledTransaction<null>>;
     /**
+     * Construct and simulate a get_proposal_count transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+     * Get the total number of proposals created
+     */
+    get_proposal_count: (options?: MethodOptions) => Promise<AssembledTransaction<u32>>;
+    /**
      * Construct and simulate a withdraw transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
      * Withdraw funds from the Treasury.
      * ONLY the registered Governance contract can authorize this.
@@ -123,6 +128,7 @@ export declare class Client extends ContractClient {
         get_proposal: (json: string) => AssembledTransaction<Proposal>;
         create_proposal: (json: string) => AssembledTransaction<number>;
         init_governance: (json: string) => AssembledTransaction<null>;
+        get_proposal_count: (json: string) => AssembledTransaction<number>;
         withdraw: (json: string) => AssembledTransaction<null>;
         init_treasury: (json: string) => AssembledTransaction<null>;
     };
