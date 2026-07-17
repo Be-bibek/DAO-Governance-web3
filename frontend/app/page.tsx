@@ -169,42 +169,54 @@ export default function Dashboard() {
                     <Progress value={yesPercentage} className="h-2 bg-red-950 [&>div]:bg-green-500" />
                   </div>
                 </CardContent>
-                <CardFooter className="bg-black/20 border-t border-white/5 p-4 flex gap-3">
+                <CardFooter className="bg-black/20 border-t border-white/5 p-4 flex flex-col gap-3">
                   {!publicKey ? (
                     <Button variant="secondary" className="w-full" onClick={connect}>
                       Connect to Vote
                     </Button>
-                  ) : status === 'Active' ? (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        disabled={actionLoading !== null}
-                        onClick={() => handleVote(Number(proposal.id), true)}
-                        className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10"
-                      >
-                        {actionLoading === `vote-yes-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote Yes'}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        disabled={actionLoading !== null}
-                        onClick={() => handleVote(Number(proposal.id), false)}
-                        className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
-                      >
-                        {actionLoading === `vote-no-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote No'}
-                      </Button>
-                    </>
-                  ) : status === 'Passed' ? (
-                    <Button 
-                      onClick={() => handleExecute(Number(proposal.id))}
-                      disabled={actionLoading !== null}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      {actionLoading === `execute-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Execute Proposal'}
-                    </Button>
                   ) : (
-                    <Button variant="outline" disabled className="w-full opacity-50">
-                      Voting Closed
-                    </Button>
+                    <>
+                      {status === 'Active' && (
+                        <div className="flex w-full gap-3">
+                          <Button 
+                            variant="outline" 
+                            disabled={actionLoading !== null}
+                            onClick={() => handleVote(Number(proposal.id), true)}
+                            className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10"
+                          >
+                            {actionLoading === `vote-yes-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote Yes'}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            disabled={actionLoading !== null}
+                            onClick={() => handleVote(Number(proposal.id), false)}
+                            className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+                          >
+                            {actionLoading === `vote-no-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote No'}
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {status === 'Passed' && (
+                        <Button 
+                          onClick={() => handleExecute(Number(proposal.id))}
+                          disabled={actionLoading !== null}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {actionLoading === `execute-${Number(proposal.id)}` ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Execute Proposal'}
+                        </Button>
+                      )}
+
+                      {(status === 'Active' || status === 'Failed' || status === 'Executed') && (
+                         <Button 
+                          variant="outline" 
+                          disabled 
+                          className={`w-full opacity-50 ${status === 'Executed' ? 'border-green-500/30 text-green-400' : ''}`}
+                        >
+                          {status === 'Active' ? 'Requires 2 Yes Votes to Execute' : status === 'Executed' ? 'Proposal Executed' : 'Voting Failed'}
+                        </Button>
+                      )}
+                    </>
                   )}
                 </CardFooter>
               </Card>
