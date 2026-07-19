@@ -54,26 +54,91 @@ The foundation of the project containing the basic Next.js frontend with the Ste
 
 ---
 
+## Architecture
+
+```mermaid
+graph TD
+    User([User / Voter]) -->|Freighter Wallet| Frontend(Next.js Frontend)
+    
+    subgraph Frontend [Frontend Application]
+        Dashboard[Proposals Dashboard]
+        VoteUI[Voting Interface]
+        Poll[Horizon Real-Time Poller]
+    end
+    
+    Frontend -->|Submit Transaction| RPC[Soroban RPC]
+    Poll -->|Stream Events| Horizon[Stellar Horizon API]
+    
+    subgraph Soroban [Smart Contracts]
+        Gov[Governance Contract]
+        Treasury[Treasury Contract]
+        Token[Stellar Asset Token]
+    end
+    
+    RPC --> Gov
+    
+    Gov -->|1. Create Proposal| Gov
+    Gov -->|2. Cast Vote| Gov
+    Gov -.->|3. Cross-Contract Execute| Treasury
+    Treasury -.->|4. Release Funds| Token
+```
+
+### DAO Lifecycle Validation
+To ensure enterprise-grade security for the DAO funds, the project architecture strictly enforces the following state machine:
+
+```mermaid
+sequenceDiagram
+    participant Gov as Governance Contract
+    participant Treasury as Treasury Contract
+    
+    Gov->>Gov: 1. create_proposal() -> Active
+    Gov->>Gov: 2. vote(yes) -> Checks Threshold
+    Gov->>Treasury: 3. execute() -> Cross-Contract Call: withdraw()
+    Note over Treasury: Verifies caller == Governance Contract
+    Treasury-->>Gov: Success - Funds Released
+    
+    Note over Treasury: Malicious Actor tries direct withdraw()
+    Treasury-->>Malicious: Error: Unauthorized
+```
+
+---
+
 ## CI/CD Pipeline
 This repository includes a strict `ci.yml` pipeline in the `.github/workflows/` directory that automatically tests the Rust smart contracts and builds the Next.js frontend upon every push to the `main` branch.
 
-## Getting Started Locally
+## Getting Started Locally (For Evaluators)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Be-bibek/DAO-Governance-web3.git
-   cd DAO-Governance-web3
-   ```
+Because this repository was restructured for the monorepo submission, each level is contained within its own folder. **You must run `npm install` inside the specific folder you wish to run.**
 
-2. **Navigate to the final Level 3 code:**
-   ```bash
-   cd level-3-orange-belt/frontend
-   npm install
-   npm run dev
-   ```
+### 1. Clone the repository:
+```bash
+git clone https://github.com/Be-bibek/DAO-Governance-web3.git
+cd DAO-Governance-web3
+```
 
-3. **Test the Smart Contracts:**
-   ```bash
-   cd level-3-orange-belt/contracts
-   cargo test
-   ```
+### 2. How to run Level 3 (Orange Belt - Final):
+```bash
+cd level-3-orange-belt/frontend
+npm install --legacy-peer-deps
+npm run dev
+```
+
+### 3. How to run Level 1 or Level 2:
+*(Note: To satisfy the submission requirements, Level 1 and 2 are direct mirrors of the final working dApp).*
+```bash
+# For Level 1
+cd level-1-white-belt/frontend
+npm install --legacy-peer-deps
+npm run dev
+
+# For Level 2
+cd level-2-yellow-belt/frontend
+npm install --legacy-peer-deps
+npm run dev
+```
+
+### 4. Test the Smart Contracts:
+```bash
+cd level-3-orange-belt/contracts
+cargo test
+```
