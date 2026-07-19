@@ -2,9 +2,9 @@
 
 This repository contains the complete progression for the Stellar hackathon/course, neatly organized into `level-1`, `level-2`, and `level-3` directories exactly as required by the evaluator.
 
-## Live Demo
-**Live Demo URL:** [https://dao-governance-web3.vercel.app](https://dao-governance-web3.vercel.app) *(Update this to your real URL!)*
-*(Note: Ensure you connect to the Vercel project with the Root Directory set to `level-3-orange-belt/frontend`)*
+## Contract Execution
+![Contract Executed](./assets/contract_executed.png)
+*(Screenshot of the proposal executing successfully)*
 
 ---
 
