@@ -12,19 +12,7 @@ This repository contains the complete progression for the Stellar hackathon/cour
 
 Our final level 3 application is a comprehensive web3 platform built on Next.js, featuring complex Soroban cross-contract authentication and real-time live events for a DAO Governance and Treasury platform.
 
-### Proof of Functionality (Level 3 Screenshots)
 
-1. **Mobile Responsive UI:**
-   <!-- TODO: Replace the path below with a real screenshot of your app on a phone size -->
-   ![Mobile Responsive UI](./assets/mobile_ui.png)
-
-2. **CI/CD Pipeline Running Successfully:**
-   <!-- TODO: Replace the path below with a real screenshot of the green checkmarks in GitHub Actions -->
-   ![CI/CD Pipeline](./assets/ci_cd_success.png)
-
-3. **Terminal Output (3+ Passing Tests):**
-   <!-- TODO: Replace the path below with a real screenshot of `cargo test` passing -->
-   ![Cargo Test Output](./assets/cargo_test_success.png)
 
 ### Contract Deployment Details (Level 3)
 * **Deployed Escrow/Treasury Contract Address:** `CDXOLH55Y6ZKAUHNIS2PL3GO56CRND7VS3P6J36ISWYLH6W2PUPR5NEH`
@@ -36,11 +24,7 @@ Our final level 3 application is a comprehensive web3 platform built on Next.js,
 
 The Level 2 submission introduces the Soroban smart contracts (Governance core logic) integrated into the upgraded React frontend.
 
-### Proof of Functionality (Level 2 Screenshots)
 
-1. **Wallet Options Available:**
-   <!-- TODO: Replace the path below with a real screenshot of the Wallet Kit modal showing Freighter/Albedo -->
-   ![Wallet Connect Modal](./assets/wallet_modal.png)
 
 ### Contract Deployment Details (Level 2)
 * **Deployed Contract Address:** `CB3IKF2OCPH2QRPYHWR5LUO674J2JO7VDUIACCMFUMGTRFK4HBG7E7XT`
